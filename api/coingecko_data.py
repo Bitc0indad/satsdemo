@@ -103,4 +103,3 @@ if __name__ == '__main__':
             print(f"\nNo historical BTC/USD price available for {historical_date}")
     else:
         print("\nFailed to fetch historical Bitcoin prices.")
-

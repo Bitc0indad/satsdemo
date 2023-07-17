@@ -1,14 +1,15 @@
 import requests
-from datetime import date, timedelta
 import pandas as pd
+from datetime import date, datetime, timedelta
 
-# Kraken API endpoint URLs and Constants
+# Constants
 BASE_URL = "https://api.kraken.com/0/public"
 SYSTEM_STATUS_API = f"{BASE_URL}/SystemStatus"
 TICKER_API = f"{BASE_URL}/Ticker"
 OHLC_API = f"{BASE_URL}/OHLC"  # Historical price API endpoint
+HKD_HISTORICAL_URL = "https://raw.githubusercontent.com/bitkarrot/satshkd-vercel/main/public/hkd_historical"
 
-# XBT.M pair
+# XBT.M pair (Kraken has a weird ticker for Bitcoin)
 PAIR = 'XXBTZUSD'
 
 # Function to get historical price from Kraken
@@ -87,15 +88,35 @@ def get_data():
         formatted_historical_price = "{:,.0f}".format(float(historical_price))
         data.append(f"Historical Price of BTC/USD on {historical_date}: ${formatted_historical_price}\n")
 
-        # Modify the print statement for compared HKD historical price
-        formatted_historical_btcusd_rate = "30,229"  # Example value
-        data.append(f"Compared to HKD Historical Price BTC/USD on {historical_date}: ${formatted_historical_btcusd_rate}")
+    # Fetch historical Bitcoin prices from the given JSON data URL
+    response = requests.get(HKD_HISTORICAL_URL)
+    if response.status_code == 200:
+        historical_data = response.json()
+
+        # Create DataFrame from the historical Bitcoin prices data
+        df = pd.DataFrame(historical_data)
+        df["date"] = pd.to_datetime(df["date"])
+        df.sort_values("date", inplace=True)
+
+        # Filter the DataFrame for the historical date
+        historical_df = df[df["date"] == historical_date]
+
+        # Print the filtered historical Bitcoin price
+        if not historical_df.empty:
+            historical_btcusd_rate = historical_df.iloc[0]["btcusd_rate"]
+            formatted_historical_btcusd_rate = "{:,.0f}".format(historical_btcusd_rate)
+            data.append(f"\nCompared to HKD Historical Price BTC/USD on {historical_date}: ${formatted_historical_btcusd_rate}")
+        else:
+            data.append(f"\nNo historical BTC/USD price available for {historical_date}")
     else:
-        data.append(f"Unable to retrieve historical price for BTC/USD on {historical_date}")
+        data.append("\nFailed to fetch historical Bitcoin prices.")
 
     return data
 
 if __name__ == '__main__':
     result = get_data()
-    for item in result:
-        print(item)
+    if result is not None:
+        for item in result:
+            print(item)
+    else:
+        print("No data available.")
