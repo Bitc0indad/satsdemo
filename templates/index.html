@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <title>Gothons Of Planet Percal #25</title>
+    </head>
+<body>
+<p>
+{% if greeting %}
+    I just wanted to say
+    <em style="color: green; font-size: 2em;">{{ greeting }}</em>.
+{% else %}
+    <em>Hello</em>, world!
+{% endif %}
+</p>
+
+<p>
+    Kraken Data 123
+    {{kraken_data}}
+</p>
+
+<h3> My State is {{ state }}</h3>
+
+
+</body>
+</html>
